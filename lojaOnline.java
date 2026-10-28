@@ -19,6 +19,21 @@ public class lojaOnline {
     }
 }
  
+class PoliticaDesconto {
+ 
+    static final double PERCENTUAL_VIP = 0.10; 
+    private PoliticaDesconto() {
+    }
+ 
+    static double calcular(double subtotal, boolean clienteVip) {
+        return clienteVip ? subtotal * PERCENTUAL_VIP : 0.0;
+    }
+ 
+    static String descricao() {
+        return String.format(Locale.US, "%.0f%%", PERCENTUAL_VIP * 100);
+    }
+}
+ 
 class Item {
     final String nome;
     final double preco;
@@ -48,26 +63,20 @@ class Carrinho {
         return soma;
     }
  
+    double desconto() {
+        return PoliticaDesconto.calcular(subtotal(), clienteVip);
+    }
+ 
     double total() {
-        double total = subtotal();
-        if (clienteVip) {
-            total = total * 0.90; 
-        }
-        return total;
+        return subtotal() - desconto();
     }
 }
  
 class NotaFiscal {
     String gerar(Carrinho carrinho) {
-        double subtotal = carrinho.subtotal();
-        double desconto = 0;
-        if (carrinho.clienteVip) {
-            desconto = subtotal * 0.10; 
-        }
-        double total = subtotal - desconto;
         return String.format(Locale.US,
-                "NOTA FISCAL | Subtotal: R$ %.2f | Desconto VIP (10%%): R$ %.2f | Total: R$ %.2f",
-                subtotal, desconto, total);
+                "NOTA FISCAL | Subtotal: R$ %.2f | Desconto VIP (%s): R$ %.2f | Total: R$ %.2f",
+                carrinho.subtotal(), PoliticaDesconto.descricao(), carrinho.desconto(), carrinho.total());
     }
 }
  
@@ -75,9 +84,7 @@ class Relatorio {
     double economiaDosClientesVip(List<Carrinho> carrinhos) {
         double economia = 0;
         for (Carrinho carrinho : carrinhos) {
-            if (carrinho.clienteVip) {
-                economia += carrinho.subtotal() * 0.10; 
-            }
+            economia += carrinho.desconto();
         }
         return economia;
     }
@@ -85,6 +92,7 @@ class Relatorio {
  
 class EmailPromocional {
     String mensagem(String nome) {
-        return "Olá, " + nome + "! Como cliente VIP, você tem 10% de desconto em todas as compras.";
+        return "Olá, " + nome + "! Como cliente VIP, você tem "
+                + PoliticaDesconto.descricao() + " de desconto em todas as compras.";
     }
 }
